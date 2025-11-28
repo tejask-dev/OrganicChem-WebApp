@@ -7,9 +7,12 @@ import os
 app = FastAPI(title="Organic Chemistry AI", version="1.0.0")
 
 # Configure CORS - allow specific origins in production
-cors_origins_str = os.getenv("CORS_ORIGINS", "")
+# Default fallback includes common Vercel deployment URL
+DEFAULT_VERCEL_URL = "https://organic-chem-web-app.vercel.app"
+cors_origins_str = os.getenv("CORS_ORIGINS", DEFAULT_VERCEL_URL)
+
 # Split by comma and strip whitespace, filter out empty strings
-if cors_origins_str and cors_origins_str.strip():
+if cors_origins_str and cors_origins_str.strip() and cors_origins_str.strip() != "*":
     cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
     use_credentials = True
     print(f"CORS Origins configured: {cors_origins} (with credentials)")  # Debug log
@@ -25,8 +28,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=use_credentials,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
     expose_headers=["*"],
     max_age=3600,
 )
