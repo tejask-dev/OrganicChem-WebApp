@@ -1,46 +1,79 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from .models import StructureRequest, StructureResponse, ExplanationResponse
 from .chemistry import process_structure, generate_explanation
 import os
 
+# Allowed origins - hardcoded for reliability
+ALLOWED_ORIGINS = [
+    "https://organic-chem-web-app.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
+# Add any additional origins from environment variable
+env_origins = os.getenv("CORS_ORIGINS", "")
+if env_origins:
+    for origin in env_origins.split(","):
+        origin = origin.strip()
+        if origin and origin not in ALLOWED_ORIGINS:
+            ALLOWED_ORIGINS.append(origin)
+
+print(f"CORS Allowed Origins: {ALLOWED_ORIGINS}")
+
+
+class CORSHandler(BaseHTTPMiddleware):
+    """Custom CORS middleware that handles preflight requests properly"""
+    
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin", "")
+        
+        # Check if origin is allowed
+        is_allowed = origin in ALLOWED_ORIGINS or not origin
+        
+        # Handle preflight OPTIONS request
+        if request.method == "OPTIONS":
+            response = Response(
+                content="",
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": origin if is_allowed else ALLOWED_ORIGINS[0],
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, X-Requested-With, Origin",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "3600",
+                }
+            )
+            return response
+        
+        # Process the actual request
+        response = await call_next(request)
+        
+        # Add CORS headers to response
+        if is_allowed and origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Expose-Headers"] = "*"
+        
+        return response
+
+
 app = FastAPI(title="Organic Chemistry AI", version="1.0.0")
 
-# Configure CORS - allow specific origins in production
-# Default fallback includes common Vercel deployment URL
-DEFAULT_VERCEL_URL = "https://organic-chem-web-app.vercel.app"
-cors_origins_str = os.getenv("CORS_ORIGINS", DEFAULT_VERCEL_URL)
-
-# Split by comma and strip whitespace, filter out empty strings
-if cors_origins_str and cors_origins_str.strip() and cors_origins_str.strip() != "*":
-    cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
-    use_credentials = True
-    print(f"CORS Origins configured: {cors_origins} (with credentials)")  # Debug log
-else:
-    # Fallback: allow all origins but without credentials (required by CORS spec)
-    cors_origins = ["*"]
-    use_credentials = False
-    print(f"CORS Origins configured: {cors_origins} (no credentials - set CORS_ORIGINS env var for production)")  # Debug log
-
-# Add CORS middleware - must be added before routes
-# This automatically handles OPTIONS preflight requests
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=use_credentials,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],
-    max_age=3600,
-)
+# Add custom CORS handler first (before other middleware)
+app.add_middleware(CORSHandler)
 
 @app.get("/")
 def read_root():
     return {
         "status": "online",
         "service": "Organic Chemistry AI API",
-        "cors_origins": cors_origins,
-        "cors_credentials": use_credentials
+        "cors_origins": ALLOWED_ORIGINS
     }
 
 @app.get("/health")
@@ -48,9 +81,8 @@ def health_check():
     """Health check endpoint with CORS info"""
     return {
         "status": "healthy",
-        "cors_configured": len(cors_origins) > 0,
-        "cors_origins": cors_origins if cors_origins != ["*"] else "all origins",
-        "cors_credentials": use_credentials
+        "cors_configured": True,
+        "cors_origins": ALLOWED_ORIGINS
     }
 
 @app.post("/api/resolve", response_model=StructureResponse)
