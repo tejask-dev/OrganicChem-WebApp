@@ -9,17 +9,23 @@ app = FastAPI(title="Organic Chemistry AI", version="1.0.0")
 # Configure CORS - allow specific origins in production
 cors_origins_str = os.getenv("CORS_ORIGINS", "*")
 # Split by comma and strip whitespace, filter out empty strings
-cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()] if cors_origins_str != "*" else ["*"]
+if cors_origins_str and cors_origins_str.strip() != "*":
+    cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+else:
+    cors_origins = ["*"]
 
 print(f"CORS Origins configured: {cors_origins}")  # Debug log
 
+# Add CORS middleware - must be added before routes
+# This automatically handles OPTIONS preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
     expose_headers=["*"],
+    max_age=3600,
 )
 
 @app.get("/")
