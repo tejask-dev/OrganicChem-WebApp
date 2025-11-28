@@ -1,0 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gradient-start: #667eea;
+  --gradient-end: #764ba2;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.25);
+}
+
+/* Glass Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Gradient Text */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  @apply px-5 py-2.5 rounded-xl font-medium transition-all duration-200;
+  background: white;
+  border: 2px solid #e5e7eb;
+  color: #374151;
+}
+
+.btn-secondary:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* Input - Fixed: removed the search icon from inside */
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl font-medium transition-all duration-200 outline-none;
+  background: white;
+  border: 2px solid #e5e7eb;
+}
+
+.input-field:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.input-field::placeholder {
+  color: #9ca3af;
+}
+
+/* Cards */
+.card {
+  @apply rounded-2xl p-6 transition-all duration-200;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Kekule.js Styling */
+.K-Chem-Editor-Composer {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.K-Chem-Editor-Composer .K-Chem-Editor-Toolbar {
+  background: #fafafa !important;
+  border-right: 1px solid #e5e7eb !important;
+  padding: 8px !important;
+}
+
+.K-Widget.K-Button {
+  border-radius: 10px !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  margin: 3px !important;
+  transition: all 0.2s !important;
+}
+
+.K-Widget.K-Button:hover {
+  background: #f3f4f6 !important;
+  border-color: #667eea !important;
+  transform: scale(1.05);
+}
+
+.K-Widget.K-Button-Checked,
+.K-Widget.K-Button-Active {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+.K-Widget.K-Button-Checked *,
+.K-Widget.K-Button-Active * {
+  filter: brightness(0) invert(1);
+}
+
+.K-Chem-Editor-Client {
+  background: white !important;
+}
+
+.K-Widget.K-Dialog {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+.K-Widget.K-Dialog-Caption {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 16px 20px !important;
+}
+
+.K-Res-StatusBar {
+  background: #fafafa !important;
+  border-top: 1px solid #e5e7eb !important;
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  padding: 8px 12px !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Selection */
+::selection {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+/* SVG in structure display */
+.structure-svg svg {
+  max-width: 100%;
+  height: auto;
+}
