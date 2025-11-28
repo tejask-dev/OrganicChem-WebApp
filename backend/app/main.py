@@ -7,21 +7,24 @@ import os
 app = FastAPI(title="Organic Chemistry AI", version="1.0.0")
 
 # Configure CORS - allow specific origins in production
-cors_origins_str = os.getenv("CORS_ORIGINS", "*")
+cors_origins_str = os.getenv("CORS_ORIGINS", "")
 # Split by comma and strip whitespace, filter out empty strings
-if cors_origins_str and cors_origins_str.strip() != "*":
+if cors_origins_str and cors_origins_str.strip():
     cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+    use_credentials = True
+    print(f"CORS Origins configured: {cors_origins} (with credentials)")  # Debug log
 else:
+    # Fallback: allow all origins but without credentials (required by CORS spec)
     cors_origins = ["*"]
-
-print(f"CORS Origins configured: {cors_origins}")  # Debug log
+    use_credentials = False
+    print(f"CORS Origins configured: {cors_origins} (no credentials - set CORS_ORIGINS env var for production)")  # Debug log
 
 # Add CORS middleware - must be added before routes
 # This automatically handles OPTIONS preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
+    allow_credentials=use_credentials,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
     expose_headers=["*"],
@@ -30,7 +33,22 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"status": "online", "service": "Organic Chemistry AI API"}
+    return {
+        "status": "online",
+        "service": "Organic Chemistry AI API",
+        "cors_origins": cors_origins,
+        "cors_credentials": use_credentials
+    }
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint with CORS info"""
+    return {
+        "status": "healthy",
+        "cors_configured": len(cors_origins) > 0,
+        "cors_origins": cors_origins if cors_origins != ["*"] else "all origins",
+        "cors_credentials": use_credentials
+    }
 
 @app.post("/api/resolve", response_model=StructureResponse)
 async def resolve_structure(request: StructureRequest):
