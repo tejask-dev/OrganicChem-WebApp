@@ -7,13 +7,19 @@ import os
 app = FastAPI(title="Organic Chemistry AI", version="1.0.0")
 
 # Configure CORS - allow specific origins in production
-cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+cors_origins_str = os.getenv("CORS_ORIGINS", "*")
+# Split by comma and strip whitespace, filter out empty strings
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()] if cors_origins_str != "*" else ["*"]
+
+print(f"CORS Origins configured: {cors_origins}")  # Debug log
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 @app.get("/")
