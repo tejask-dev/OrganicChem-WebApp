@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Maximize2 } from 'lucide-react';
 
 interface StructureDisplayProps {
   svg: string;
@@ -10,7 +9,6 @@ interface StructureDisplayProps {
 const StructureDisplay: React.FC<StructureDisplayProps> = ({ svg, title }) => {
   if (!svg) return null;
 
-  // Clean up the SVG - remove any problematic attributes
   const cleanSvg = svg
     .replace(/width="[^"]*"/, 'width="100%"')
     .replace(/height="[^"]*"/, 'height="100%"')
@@ -18,19 +16,20 @@ const StructureDisplay: React.FC<StructureDisplayProps> = ({ svg, title }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-lg"
+      className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}
     >
       {title && (
-        <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100 flex items-center justify-between">
-          <p className="text-sm font-semibold text-green-700">{title}</p>
-          <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full font-medium">
-            ✓ Found
+        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+          <p className="text-sm font-semibold text-slate-700 truncate">{title}</p>
+          <span className="flex-shrink-0 ml-3 text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-semibold border border-indigo-100">
+            Found
           </span>
         </div>
       )}
-      <div 
+      <div
         className="p-6 flex items-center justify-center bg-white"
         dangerouslySetInnerHTML={{ __html: cleanSvg }}
         style={{ minHeight: '200px' }}

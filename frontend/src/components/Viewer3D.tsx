@@ -153,8 +153,8 @@ const Viewer3D: React.FC<Viewer3DProps> = ({ molBlock }) => {
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Loading 3D view...</p>
+            <Loader2 className="w-7 h-7 animate-spin text-indigo-500 mx-auto mb-2.5" />
+            <p className="text-sm text-slate-500 font-medium">Loading 3D view…</p>
           </div>
         </div>
       )}
@@ -162,9 +162,9 @@ const Viewer3D: React.FC<Viewer3DProps> = ({ molBlock }) => {
       {/* Error */}
       {error && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <div className="text-center text-gray-500">
-            <p className="font-medium">{error}</p>
-            <p className="text-sm mt-1">Try analyzing a molecule first</p>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-600">{error}</p>
+            <p className="text-xs text-slate-400 mt-1">Try analyzing a molecule first</p>
           </div>
         </div>
       )}
@@ -172,39 +172,45 @@ const Viewer3D: React.FC<Viewer3DProps> = ({ molBlock }) => {
       {/* Controls */}
       {!isLoading && !error && isInitialized && (
         <>
-          <div className="absolute bottom-4 left-4 z-20 flex gap-2">
+          <div className="absolute bottom-4 left-4 z-20 flex gap-1.5">
             <button
               onClick={handleReset}
-              className="p-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-lg border border-gray-200 transition-all"
-              title="Reset View"
+              className="p-2 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+              style={{ boxShadow: '0 1px 3px rgba(15,23,42,0.08)' }}
+              title="Reset view"
+              aria-label="Reset view"
             >
-              <RotateCcw className="w-4 h-4 text-gray-600" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
             </button>
             <button
               onClick={handleZoomIn}
-              className="p-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-lg border border-gray-200 transition-all"
-              title="Zoom In"
+              className="p-2 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+              style={{ boxShadow: '0 1px 3px rgba(15,23,42,0.08)' }}
+              title="Zoom in"
+              aria-label="Zoom in"
             >
-              <ZoomIn className="w-4 h-4 text-gray-600" />
+              <ZoomIn className="w-3.5 h-3.5 text-slate-500" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="p-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-lg border border-gray-200 transition-all"
-              title="Zoom Out"
+              className="p-2 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+              style={{ boxShadow: '0 1px 3px rgba(15,23,42,0.08)' }}
+              title="Zoom out"
+              aria-label="Zoom out"
             >
-              <ZoomOut className="w-4 h-4 text-gray-600" />
+              <ZoomOut className="w-3.5 h-3.5 text-slate-500" />
             </button>
           </div>
 
-          <div className="absolute bottom-4 right-4 z-20 text-xs text-gray-400 bg-white/90 px-3 py-2 rounded-lg shadow">
-            Drag to rotate • Scroll to zoom
+          <div className="absolute bottom-4 right-4 z-20 text-[11px] text-slate-400 bg-white/90 px-2.5 py-1.5 rounded-lg border border-slate-100">
+            Drag to rotate · Scroll to zoom
           </div>
         </>
       )}
 
       {/* NGL Container */}
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className="w-full h-full"
         style={{ minHeight: '450px' }}
       />
