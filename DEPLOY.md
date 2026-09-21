@@ -2,6 +2,8 @@
 
 This guide covers deploying your Organic Chemistry Structure ↔ Name Conversion app to production.
 
+All hosting root directories are relative to the Git checkout: use `frontend` or `backend`. The repository does not contain an `organic-chem-app/` wrapper folder. Shell examples assume Bash/zsh.
+
 ## 📋 Pre-Deployment Checklist
 
 - [ ] Code is pushed to GitHub
@@ -24,7 +26,7 @@ This guide covers deploying your Organic Chemistry Structure ↔ Name Conversion
    - **Name:** `moleculeai-backend`
    - **Region:** Choose closest to your users
    - **Branch:** `main` (or your main branch)
-   - **Root Directory:** `organic-chem-app/backend`
+   - **Root Directory:** `backend`
    - **Runtime:** `Python 3`
    - **Build Command:** 
      ```bash
@@ -51,14 +53,14 @@ This guide covers deploying your Organic Chemistry Structure ↔ Name Conversion
 3. **Import your GitHub repository**
 4. **Configure the project:**
    - **Framework Preset:** Vite
-   - **Root Directory:** `organic-chem-app/frontend`
+   - **Root Directory:** `frontend`
    - **Build Command:** `npm run build`
    - **Output Directory:** `dist`
    - **Environment Variables:**
      ```
      VITE_API_URL=https://your-backend-url.onrender.com/api
      ```
-     (Replace with your actual Render backend URL)
+     (Replace with your actual Render backend URL before building. Changes require a new frontend build/deployment.)
 
 5. **Click "Deploy"**
 6. **Wait for deployment** (~2-3 minutes)
@@ -90,13 +92,12 @@ This guide covers deploying your Organic Chemistry Structure ↔ Name Conversion
 
 1. **Click "+ New" → "GitHub Repo"** (or add service)
 2. **Configure:**
-   - **Root Directory:** `organic-chem-app/backend`
+   - **Root Directory:** `backend`
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - **Environment Variables:**
      ```
-     PORT=${{PORT}}
-     CORS_ORIGINS=${{FRONTEND_URL}}
+     CORS_ORIGINS=https://your-frontend-domain
      ```
 
 3. **Generate Domain** (click "Settings" → "Generate Domain")
@@ -106,17 +107,18 @@ This guide covers deploying your Organic Chemistry Structure ↔ Name Conversion
 
 1. **Click "+ New" → "GitHub Repo"** again
 2. **Configure:**
-   - **Root Directory:** `organic-chem-app/frontend`
+   - **Root Directory:** `frontend`
    - **Build Command:** `npm install && npm run build`
    - **Start Command:** `npx serve -s dist -l $PORT`
    - **Environment Variables:**
      ```
-     VITE_API_URL=${{BACKEND_URL}}/api
-     PORT=${{PORT}}
+     VITE_API_URL=https://your-backend-domain/api
      ```
 
 3. **Generate Domain** for frontend
 4. **Update backend CORS** with frontend URL
+
+Use the backend service's public URL for `VITE_API_URL`, and set it before the frontend build. Use the frontend service's public origin for `CORS_ORIGINS`. The start commands read the hosting platform's `PORT` variable.
 
 ---
 
@@ -136,8 +138,10 @@ curl -L https://fly.io/install.sh | sh
 
 ### Step 2: Deploy Backend
 
+Start from the repository root (`OrganicChem-WebApp/`).
+
 ```bash
-cd organic-chem-app/backend
+cd backend
 fly launch
 # Follow prompts, select region
 # Set CORS_ORIGINS environment variable
@@ -147,29 +151,37 @@ fly deploy
 
 ### Step 3: Deploy Frontend
 
+Return to the repository root before running this block. The existing Nginx configuration proxies `/api/` to a Docker service named `backend`; separate Fly apps need that proxy target changed to the deployed backend before launch. Configure the Vite API URL at build time as shown below.
+
 ```bash
-cd organic-chem-app/frontend
+cd frontend
+# Replace the URL with the deployed backend's public URL.
+cat > .env.production.local <<'EOF'
+VITE_API_URL=https://your-backend-url.fly.dev/api
+EOF
 fly launch
 # Follow prompts
-# Set VITE_API_URL environment variable
-fly secrets set VITE_API_URL=https://your-backend-url.fly.dev/api
 fly deploy
 ```
+
+The frontend Dockerfile copies this local environment file into the build stage. Vite embeds its value in the generated JavaScript; setting a runtime Fly secret does not update it. Rebuild the frontend after any API URL change. `VITE_*` values are public browser configuration, so never put secrets in them.
 
 ---
 
 ## 🔧 Environment Variables Reference
 
-### Frontend (.env or Vercel/Railway settings)
+### Frontend (`frontend/.env.local` or Vercel/Railway build settings)
 ```env
 VITE_API_URL=https://your-backend-url.com/api
 ```
 
-### Backend (.env or Render/Railway settings)
+### Backend (process environment or Render/Railway service settings)
 ```env
 CORS_ORIGINS=https://your-frontend-url.com
 PORT=8000
 ```
+
+The backend does not automatically read a `.env` file. Export `CORS_ORIGINS` in the shell or set it in the host's service environment. Its value is a comma-separated list of frontend origins without paths or trailing slashes. `PORT` is passed by the start command (`--port $PORT`), not read by the application itself.
 
 ---
 

@@ -8,11 +8,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![RDKit](https://img.shields.io/badge/RDKit-2023.9-FF6B6B?logo=python)](https://www.rdkit.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Transform molecular structures into IUPAC names and vice versa with AI-powered precision**
 
-[🚀 Live Demo](#) • [📖 Documentation](#features) • [🐛 Report Bug](https://github.com/tejask-dev/OrganicChem-WebApp/issues) • [💡 Request Feature](https://github.com/tejask-dev/OrganicChem-WebApp/issues)
+[🚀 Deployed Interface](https://organic-chem-web-app.vercel.app) • [📖 Documentation](#-features) • [🐛 Report Bug](https://github.com/tejask-dev/OrganicChem-WebApp/issues) • [💡 Request Feature](https://github.com/tejask-dev/OrganicChem-WebApp/issues)
 
 </div>
 
@@ -118,34 +117,41 @@ Draw any molecule → Get instant IUPAC name and analysis
 - **Node.js 18+**
 - **npm** or **yarn**
 
+The commands below use Bash/zsh and npm. `frontend/` and `backend/` are directly inside the cloned repository.
+
 ### Quick Start
 
 1. **Clone the repository**
 ```bash
 git clone https://github.com/tejask-dev/OrganicChem-WebApp.git
-cd OrganicChem-WebApp/organic-chem-app
+cd OrganicChem-WebApp
 ```
 
-2. **Set up Backend**
+2. **Set up Backend** (from the repository root)
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
-3. **Set up Frontend**
+On Windows, use `py -m venv .venv`, then activate with `.venv\Scripts\Activate.ps1` in PowerShell or `.venv\Scripts\activate.bat` in Command Prompt. Create a fresh environment for your machine; the repository's existing root `venv/` is not used by these instructions.
+
+3. **Set up Frontend** in a **second terminal**, starting at the repository root (`OrganicChem-WebApp/`). Leave the backend running in the first terminal.
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
+For this local setup, no environment file is required: the API client defaults to `http://localhost:8000/api`, and the backend allows `http://localhost:5173`.
+
 4. **Open your browser**
 ```
 Frontend: http://localhost:5173
 Backend API: http://localhost:8000
+API documentation: http://localhost:8000/docs
 ```
 
 ---
@@ -153,21 +159,29 @@ Backend API: http://localhost:8000
 ## 🐳 Docker Deployment
 
 ### Using Docker Compose
+
+Run from the repository root. Docker Engine and the Compose plugin must be installed.
+
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
+Open `http://localhost:3000`; the backend is available at `http://localhost:8000`. These defaults are for a browser running on the same machine as Docker. For a hosted frontend, configure `VITE_API_URL` before building (see [Configuration](#-configuration)).
+
 ### Individual Services
+
+Run these commands from the repository root as an alternative to Compose. The shared network and backend container name match the frontend's Nginx configuration.
+
 ```bash
+docker network create moleculeai
+
 # Backend
-cd backend
-docker build -t moleculeai-backend .
-docker run -p 8000:8000 moleculeai-backend
+docker build -t moleculeai-backend ./backend
+docker run -d --name backend --network moleculeai -p 8000:8000 moleculeai-backend
 
 # Frontend
-cd frontend
-docker build -t moleculeai-frontend .
-docker run -p 3000:80 moleculeai-frontend
+docker build -t moleculeai-frontend ./frontend
+docker run -d --name frontend --network moleculeai -p 3000:80 moleculeai-frontend
 ```
 
 ---
@@ -179,13 +193,14 @@ docker run -p 3000:80 moleculeai-frontend
 **Frontend (Vercel)**
 1. Push code to GitHub
 2. Import project in [Vercel](https://vercel.com)
-3. Set root directory: `organic-chem-app/frontend`
+3. Set root directory: `frontend`
 4. Add environment variable: `VITE_API_URL=https://your-backend-url.com/api`
+5. Build with `npm run build`; use `dist` as the output directory. Set the API URL before the build and redeploy after changing it.
 
 **Backend (Render)**
 1. Create new Web Service in [Render](https://render.com)
 2. Connect GitHub repository
-3. Set root directory: `organic-chem-app/backend`
+3. Set root directory: `backend`
 4. Build: `pip install -r requirements.txt`
 5. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 6. Add environment variable: `CORS_ORIGINS=https://your-frontend-url.com`
@@ -197,7 +212,7 @@ docker run -p 3000:80 moleculeai-frontend
 ## 📁 Project Structure
 
 ```
-organic-chem-app/
+OrganicChem-WebApp/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -270,16 +285,24 @@ organic-chem-app/
 
 ### Environment Variables
 
-**Frontend** (`.env.local`)
+**Frontend** (`frontend/.env.local`, or the hosting platform's build environment)
 ```env
 VITE_API_URL=http://localhost:8000/api
 ```
 
-**Backend** (`.env`)
-```env
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-PORT=8000
+Vite reads `VITE_API_URL` when the development server starts or the production bundle is built. Restart `npm run dev` after editing it; rebuild and redeploy production assets after changing it. Set the full backend URL ending in `/api`, without a trailing slash. For Docker builds, `frontend/.env.production.local` can supply the value before the image is built; runtime container environment variables do not rewrite the bundle.
+
+**Backend** (process environment, or the hosting platform's service settings)
+
+The backend reads `CORS_ORIGINS` from the process environment; it does not automatically load a `.env` file. For a custom origin, export it before starting the backend:
+
+```bash
+# Run from backend/ with the virtual environment activated.
+export CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
+python -m uvicorn app.main:app --reload --port 8000
 ```
+
+Use a comma-separated list of frontend origins (scheme, host, and optional port; no path or trailing slash). The documented localhost origins already work without this variable. On hosts that provide `PORT`, the deployment start command passes it explicitly with `--port $PORT`.
 
 ---
 
@@ -325,12 +348,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
